@@ -26,4 +26,11 @@ android {
 
 dependencies {
     implementation project(':FtcRobotController')
+
+    implementation 'com.pedropathing:revhub:3.0.2'
+    // Has to be here for PedroPathing to work (could prob use an update)
+    implementation 'com.pedropathing:tuning:1.0.0'
+    // mr alwood's Custom alience stuff, idk how this work lwky
+    implementation 'com.github.alwoodd:PedroLib:main-SNAPSHOT'
+    implementation 'dev.frozenmilk.sinister:Sloth:0.3.2'
 }

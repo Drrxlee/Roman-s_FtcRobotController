@@ -17,15 +17,11 @@ plugins {
     id 'com.android.library' version '8.13.2' apply false
 }
 
-// This is now required because aapt2 has to be downloaded from the
-// google() repository beginning with version 3.2 of the Android Gradle Plugin
+// Required to resolve dependencies hosted on Google and JitPack (e.g., Pedro Pathing)
 allprojects {
     repositories {
         mavenCentral()
         google()
+        maven { url 'https://jitpack.io' }
     }
-}
-
-repositories {
-    mavenCentral()
 }
