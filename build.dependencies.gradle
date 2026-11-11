@@ -3,7 +3,7 @@ repositories {
     google() // Needed for androidx
     maven { url = 'https://mymaven.bylazar.com/releases' }
     maven { url = 'https://jitpack.io' }
-    maven {{ url = 'https://mymaven.bylazar.com/releases' }}
+    maven { url = 'https://mymaven.bylazar.com/releases'
 }
 
 dependencies {
@@ -16,8 +16,11 @@ dependencies {
     implementation 'org.firstinspires.ftc:Hardware:12.0.0'
     implementation 'org.firstinspires.ftc:FtcCommon:12.0.0'
     implementation 'org.firstinspires.ftc:Vision:12.0.0'
+
     implementation 'androidx.appcompat:appcompat:1.2.0'
+
     implementation 'com.pedropathing:revhub:3.0.2'
     implementation 'com.github.alwoodd:PedroLib:3.1.0'
 }
 
+}

@@ -1,18 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
-
-
-
 import com.pedropathing.follower.Follower;
 import com.pedropathing.utils.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.teamPedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.teamPedroPathing.TeamPoses;
@@ -22,18 +15,17 @@ import org.lhssa.ftc.teamcode.pedroPathing.PedroMotion;
 import org.lhssa.ftc.teamcode.pedroPathing.PedroPather;
 
 /* config to make work
-* pipeline 1 = blue Alliance, so add filters and processes to cameras
-* and frames specifically for blue alliance AprilTags
+- pipeline 1 = blue Alliance, so add filters and processes to cameras
+- and frames specifically for blue alliance AprilTags
 *
-* pipeline 2 = red Alliance, so add filters and processes to cameras
- * and frames specifically for red alliance  */
+- pipeline 2 = red Alliance, so add filters and processes to cameras
+- and frames specifically for red alliance  */
+
 @Autonomous
 public class BiobuzzAutonomousmk1 extends OpMode {
 
     // private StartingSide startingSide = StartingSide.HIVEUP;
     private AllianceColor allianceColor = AllianceColor.RED;
-    private DcMotorEx testshooter = null;
-    private double currentPower = 0;
 
     private RobotHardware robotHardware;
     private PedroPather pedroPather;
@@ -66,7 +58,8 @@ public class BiobuzzAutonomousmk1 extends OpMode {
     /* what does it do? basically adds a live steam to the port 5801, so coding can see if
     its actively working
     *
-    * also sends this info continuously to the driver hub to know which one is currently selected */
+- also sends this info continuously to the driver hub to know which one is currently selected */
+
     @Override
     public void init_loop() {
         // this is telling the limelight what color team you are on
@@ -76,10 +69,6 @@ public class BiobuzzAutonomousmk1 extends OpMode {
         // switches the active pipeline (edited per alliance color)
         int activePipeline = (allianceColor == AllianceColor.BLUE) ? 1 : 2;
         limelight.pipelineSwitch(activePipeline);
-
-        testshooter = hardwareMap.get(DcMotorEx.class, "shooterMotor");
-        testshooter.setDirection(DcMotorSimple.Direction.FORWARD);
-        testshooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // what pops up on the screen.
         telemetry.addData("=== Init Menu ===", "");
@@ -99,25 +88,26 @@ public class BiobuzzAutonomousmk1 extends OpMode {
 
         // Reset state flag so case can init properly
         stateInitialized = false;
-
     }
 /* what's the limelight is currently doing
-* Limelight is scanning every frame for 3d aprilTag fiducial markers
-* limelight is also scanning the horizontal offset and vertical offset
-* along with other 3D space vectors (distance and stuff)
+- Limelight is scanning every frame for 3d aprilTag fiducial markers
+- limelight is also scanning the horizontal offset and vertical offset
+- along with other 3D space vectors (distance and stuff)
 *
-* case 6 - checks if valid target data is being given
-* target lock confirmation to driver station logs
-* provides the vision verification needed while the shooter runs for 3 seconds
-* "shootUntilComplete()"
-* before handing the controls back to pedroPathing for the final park state  */
+- case 6 - checks if valid target data is being given
+- target lock confirmation to driver station logs
+- provides the vision verification needed while the shooter runs for 3 seconds
+- "shootUntilComplete()"
+- before handing the controls back to pedroPathing for the final park state  */
+
     @Override
     public void loop() {
+        // CRITICAL: follower.update() must run on every single loop iteration
         follower.update();
         LLResult llResult = limelight.getLatestResult();
 
-        testshooter.setPower(currentPower);
-        double currentTicksPerSec = testshooter.getVelocity();
+        double currentPower = robotHardware.shooterMotor.getPower();
+        double currentTicksPerSec = robotHardware.shooterMotor.getVelocity();
         double currentRpm = (currentTicksPerSec / TICKS_PER_REV) * 60.0;
 
         telemetry.clear();
@@ -128,24 +118,19 @@ public class BiobuzzAutonomousmk1 extends OpMode {
         telemetry.addData("Set Power", "%.2f", currentPower);
         telemetry.addData("Target Velocity (ticks/s)", currentTicksPerSec);
         telemetry.addData("Calculated Speed (RPM)", "%.1f RPM", currentRpm);
-        /* if(timeToPark()){
-            pedroMotion.goPath(pedroPather.pathBetween(follower.pose(), TeamPoses.parkPose, HeadingInterpolationType.LINEAR));
-            if(pedroMotion.isPathComplete()){
-                requestOpModeStop();
-            }
-         */
+
         if (timeToPark() && currentAction < 7) {
             setNextState(7); // Jump straight to park state
         }
+
         switch (currentAction) {
             case 0: // Initial Shot
-                // Resets shooterTimer once it is entering Case 0
                 if (!stateInitialized) {
                     shooterTimer.reset();
                     stateInitialized = true;
                 }
                 if (shootUntilComplete()) {
-                    setNextState(1); //Replaced direct variable update with setNextState()
+                    setNextState(1);
                 }
                 break;
 
@@ -155,7 +140,6 @@ public class BiobuzzAutonomousmk1 extends OpMode {
                 break;
 
             case 2: // Drives to the Garden
-                // Path generated ONCE on state start instead of every loop
                 if (!stateInitialized) {
                     pedroMotion.goPath(pedroPather.pathBetween(TeamPoses.startShootPose, TeamPoses.startGardenPose, HeadingInterpolationType.LINEAR));
                     stateInitialized = true;
@@ -166,7 +150,6 @@ public class BiobuzzAutonomousmk1 extends OpMode {
                 break;
 
             case 3: // Intake Sweep Through Garden (50% Speed)
-                //Path generated once on state start
                 if (!stateInitialized) {
                     pedroMotion.goPath(pedroPather.pathBetween(TeamPoses.startGardenPose, TeamPoses.endGardenPose, HeadingInterpolationType.LINEAR), 0.5);
                     stateInitialized = true;
@@ -182,7 +165,6 @@ public class BiobuzzAutonomousmk1 extends OpMode {
                 break;
 
             case 5: // Drives back to Shoot Pose
-                //Path generated once on state start
                 if (!stateInitialized) {
                     pedroMotion.goPath(pedroPather.pathBetween(TeamPoses.startGardenPose, TeamPoses.startShootPose, HeadingInterpolationType.LINEAR));
                     stateInitialized = true;
@@ -193,13 +175,11 @@ public class BiobuzzAutonomousmk1 extends OpMode {
                 break;
 
             case 6: // Limelight Target Verification & Second Shot
-                // Resets shooterTimer ONCE when entering Case 6
                 if (!stateInitialized) {
                     shooterTimer.reset();
                     stateInitialized = true;
                 }
 
-                // Improved target presence check to prevent vision lock freezes
                 boolean hasTarget = llResult != null && llResult.isValid() && !llResult.getFiducialResults().isEmpty();
                 telemetry.addData("Limelight Target Found", hasTarget);
 
@@ -209,7 +189,6 @@ public class BiobuzzAutonomousmk1 extends OpMode {
                 break;
 
             case 7: // Park
-                // Path generated Once on state start
                 if (!stateInitialized) {
                     pedroMotion.goPath(pedroPather.pathBetween(follower.pose(), TeamPoses.parkPose, HeadingInterpolationType.LINEAR));
                     stateInitialized = true;
@@ -219,26 +198,26 @@ public class BiobuzzAutonomousmk1 extends OpMode {
                 }
                 break;
         }
+
+        telemetry.update();
     }
 
-    //helper method added to cleanly handle state transfer
     private void setNextState(int nextState) {
         currentAction = nextState;
         stateInitialized = false;
     }
+
     private boolean shootUntilComplete() {
-        boolean isComplete;
         robotHardware.shooterON();
 
-        isComplete = shooterTimer.milliseconds() > 3000;
-        if(isComplete){
+        boolean isComplete = shooterTimer.milliseconds() > 3000;
+        if (isComplete) {
             robotHardware.shooterOFF();
         }
         return isComplete;
-
     }
-    private boolean timeToPark(){
-        return parkTimer.seconds() > 15;
 
+    private boolean timeToPark() {
+        return parkTimer.seconds() > 15;
     }
 }
